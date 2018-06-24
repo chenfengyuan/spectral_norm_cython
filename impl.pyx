@@ -6,6 +6,16 @@ from libcpp.vector cimport vector
 from libc.math cimport sqrt
 from cython.parallel import prange
 
+
+cdef extern from "emmintrin.h":  # in this example, we use SSE2
+    ctypedef double __m128d
+
+    __m128d _mm_set_pd (double __A,double __B) nogil
+    __m128d _mm_add_pd (__m128d __A, __m128d __B) nogil
+    __m128d _mm_div_pd (__m128d __A, __m128d __B) nogil
+    __m128d _mm_setzero_pd() nogil
+    void _mm_store_pd (double *__P, __m128d __A) nogil
+
 cdef int N_CPU = 4
 
 cdef int A(int i, int j) nogil:
@@ -20,21 +30,31 @@ cdef double dot(vector[double] & v, vector[double] & u, int n) nogil:
 
 
 cdef void mult_Av_helper(vector[double] & v, vector[double] & out, int i, int n) nogil:
-    cdef double summ = 0
+    cdef __m128d summ = _mm_setzero_pd()
     cdef int tmp
-    for j in range(n):
-        tmp = A(i, j)
-        summ += v[j] / tmp
-    out[i] = summ
+    cdef __m128d a, b
+    cdef double[2] double_arr
+    cdef int j
+    for j in range(0, n, 2):
+        b = _mm_set_pd(v[j], v[j+1])
+        a = _mm_set_pd(A(i, j), A(i, j + 1))
+        summ = _mm_add_pd(summ, _mm_div_pd(b, a))
+    _mm_store_pd(double_arr, summ)
+    out[i] = double_arr[0] + double_arr[1]
 
 
 cdef void mult_Atv_helper(vector[double] & v, vector[double] & out, int i, int n) nogil:
-    cdef double summ = 0
+    cdef __m128d summ = _mm_setzero_pd()
     cdef int tmp
-    for j in range(n):
-        tmp = A(j, i)
-        summ += v[j] / tmp
-    out[i] = summ
+    cdef __m128d a, b
+    cdef double[2] double_arr
+    cdef int j
+    for j in range(0, n, 2):
+        b = _mm_set_pd(v[j], v[j+1])
+        a = _mm_set_pd(A(j, i), A(j + 1, i))
+        summ = _mm_add_pd(summ, _mm_div_pd(b, a))
+    _mm_store_pd(double_arr, summ)
+    out[i] = double_arr[0] + double_arr[1]
 
 
 cdef void mult_Av(vector[double] & v, vector[double] & out, int n):
@@ -58,6 +78,8 @@ cpdef main():
     cdef int n
     import sys
     n = int(sys.argv[1])
+    if n % 2 == 1:
+        n += 1
     cdef vector[double] u = vector[double]()
     cdef vector[double] v = vector[double]()
     cdef vector[double] tmp=vector[double]()
