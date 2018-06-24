@@ -35,7 +35,11 @@ cdef void mult_Av_helper(vector[double] & v, vector[double] & out, int i, int n)
     cdef __m128d a, b
     cdef double[2] double_arr
     cdef int j
-    for j in range(0, n, 2):
+    for j in range(0, n, 4):
+        b = _mm_set_pd(v[j], v[j+1])
+        a = _mm_set_pd(A(i, j), A(i, j + 1))
+        summ = _mm_add_pd(summ, _mm_div_pd(b, a))
+        j += 2
         b = _mm_set_pd(v[j], v[j+1])
         a = _mm_set_pd(A(i, j), A(i, j + 1))
         summ = _mm_add_pd(summ, _mm_div_pd(b, a))
@@ -49,7 +53,11 @@ cdef void mult_Atv_helper(vector[double] & v, vector[double] & out, int i, int n
     cdef __m128d a, b
     cdef double[2] double_arr
     cdef int j
-    for j in range(0, n, 2):
+    for j in range(0, n, 4):
+        b = _mm_set_pd(v[j], v[j+1])
+        a = _mm_set_pd(A(j, i), A(j + 1, i))
+        summ = _mm_add_pd(summ, _mm_div_pd(b, a))
+        j += 2
         b = _mm_set_pd(v[j], v[j+1])
         a = _mm_set_pd(A(j, i), A(j + 1, i))
         summ = _mm_add_pd(summ, _mm_div_pd(b, a))
@@ -78,7 +86,7 @@ cpdef main():
     cdef int n
     import sys
     n = int(sys.argv[1])
-    if n % 2 == 1:
+    while n % 8 != 0:
         n += 1
     cdef vector[double] u = vector[double]()
     cdef vector[double] v = vector[double]()
