@@ -1,11 +1,17 @@
-#!/usr/bin/env python
-# encoding: utf-8
-
 from distutils.core import setup
+from distutils.extension import Extension
 from Cython.Build import cythonize
 
+ext_modules = [
+    Extension(
+        "impl",
+        ["impl.pyx"],
+        extra_compile_args=['-fopenmp'],
+        extra_link_args=['-fopenmp'],
+    )
+]
+
 setup(
-    ext_modules = cythonize(["impl.pyx"],
-        annotate=True
-        )
+    name='spectral-norm',
+    ext_modules=cythonize(ext_modules),
 )
