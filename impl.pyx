@@ -57,19 +57,19 @@ cdef void mult_Atv_helper(vector[double] & v, vector[double] & out, int i, int n
     out[i] = double_arr[0] + double_arr[1]
 
 
-cdef void mult_Av(vector[double] & v, vector[double] & out, int n):
+cdef void mult_Av(vector[double] & v, vector[double] & out, int n) nogil:
     cdef int i, j
     for i in prange(n, nogil=True, num_threads=N_CPU):
         mult_Av_helper(v, out, i, n)
 
-cdef void mult_Atv(vector[double] & v, vector[double] & out, int n):
+cdef void mult_Atv(vector[double] & v, vector[double] & out, int n) nogil:
     cdef int i, j
     cdef double summ
     cdef int tmp
     for i in prange(n, nogil=True, num_threads=N_CPU):
         mult_Atv_helper(v, out, i, n)
 
-cdef void mult_AtAv(vector[double] & tmp, vector[double] & v, vector[double] & out, int n):
+cdef void mult_AtAv(vector[double] & tmp, vector[double] & v, vector[double] & out, int n) nogil:
     mult_Av(v, tmp, n)
     mult_Atv(tmp, out, n)
 

@@ -6,8 +6,8 @@ ext_modules = [
     Extension(
         "impl",
         ["impl.pyx"],
-        extra_compile_args=['-fopenmp'],
-        extra_link_args=['-fopenmp'],
+        extra_compile_args=['-march=native', '-msse', '-msse2', '-mfma', '-mfpmath=sse', '-fopenmp'],
+        extra_link_args=['-march=native', '-msse', '-msse2', '-mfma', '-mfpmath=sse', '-fopenmp'],
     )
 ]
 
